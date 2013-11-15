@@ -1,0 +1,79 @@
+<html>
+	<head>
+	<script type="text/javascript" src="/js/jquery.js"></script>
+	<script type="text/javascript">
+		var t;
+		var dx=1;
+		var r=0;
+		fc = function () {
+			dx=dx+1;
+			$.get("/lg",{id : "{{.}}", t : dx} ,function(result, stat){
+					lss=result.split("|");
+					ls=lss[1].slice(1,-1).split(",");
+					rr=lss[0]-0;
+					if(rr>r){
+						r=rr;
+						for(i=40;i>=1;i--){
+							k=ls[i-1];
+							for(j=1;j<=40;j++){
+								if(k%2){
+									$("#"+i+"_"+j).attr("class","bb");
+								}else{
+									$("#"+i+"_"+j).attr("class","uu");
+								}
+								k=Math.floor(k/2);
+							}
+						}
+						
+					}
+			});
+		};
+		ff = function() {
+			$(".uu").click(function(event){
+				event.stopPropagation();
+				$(event.target).attr("class", "bb");
+				$.get("/change", {id : "{{.}}", ch : $(event.target).attr("id")});
+			})
+		};
+		init = function() {
+			st = "";
+			for(var i=1;i<=40;i++){
+					st=st+'<div class="ll" style="top:'+(i-1)*20+'">';
+					for(var j=1;j<=40;j++){
+						st=st+'<div class="uu" id="'+i+'_'+j+'"></div>';
+					}
+					st=st+'</div>';
+			}
+			$("#lg").append(st);
+			setInterval("fc()", 500) 
+		};
+		$(document).ready(function(){	
+			init();
+			ff();
+			fc();
+		});
+	</script>
+	</head>
+	<body>
+		<div id="lg"></div>
+	</body>
+	<style>
+		.ll{
+			position:absolute;
+		}
+		.bb{
+			height:20px;
+			width:20px;
+			border-radius:2px;
+			background:#88FF88;
+			float:left;
+		}
+		.uu{
+			height:20px;
+			width:20px;
+			border-radius:2px;
+			background:#000000;
+			float:left;
+		}
+	</style>
+</html>
