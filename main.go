@@ -15,19 +15,13 @@ const (
 	lag int = 42
 )
 
-type pdate struct {
+type person struct {
 	m	[2][lag][lag]bool
 	k	int
 	l	sync.Mutex
 	n	bool
-}
-
-type person struct {
 	id	string
-	d	*pdate
 	running bool
-	i	chan string
-	o	chan string
 }
 
 type persons struct {
@@ -35,22 +29,20 @@ type persons struct {
 }
 
 var (
-	r rand.Source
+	r *rand.Rand
 	mp persons
 )
 
 func getrand()bool {
-	r := rand.New(rand.NewSource(99))
 	return r.Float32() > 0.7
 }
-
+///Persons Interface To Net : pprint, change
 func (pss *persons)pprint(id string, w http.ResponseWriter, t string) {
-	pss.m[id].d.n = true
-	w.Write(([]byte)(t+"|"+pss.m[id].d.output()))
+	w.Write(([]byte)(t+"|"+pss.m[id].output()))
 }
 
 func (pps *persons)change(id string, info string, w http.ResponseWriter) {
-	pps.m[id].i <- info
+	pps.m[id].iupdate(info)
 }
 
 func o(b bool)int {
@@ -59,8 +51,8 @@ func o(b bool)int {
 	}
 	return 0
 }
-
-func (ps *pdate)update(){
+///Person's Module : tupdate, iupdate, output
+func (ps *person)tupdate(){
 	ps.l.Lock()
 	cc := 0
 	ct := 0
@@ -87,8 +79,9 @@ func (ps *pdate)update(){
 	ps.k = 1 - k
 	ps.l.Unlock()
 }
-func (ps *pdate)output()string {
+func (ps *person)output()string {
 	ps.l.Lock()
+	ps.n = true
 	var mtot [lag-2]int64
     for i := lag - 2; i > 0; i-- {
 		k := mtot[i - 1]
@@ -102,6 +95,7 @@ func (ps *pdate)output()string {
     }
 	ps.l.Unlock()
 	st, _ := json.Marshal(mtot)
+	println(string(st))
 	return string(st)
 }
 
@@ -113,7 +107,7 @@ func getint(ss string)int {
 	return i
 }
 
-func (ps *pdate)iupdate(xy string) {
+func (ps *person)iupdate(xy string) {
 	ps.l.Lock()
 	ls := strings.Split(xy, "_")
 	x := getint(ls[0])
@@ -123,58 +117,39 @@ func (ps *pdate)iupdate(xy string) {
 	ps.l.Unlock()
 }
 
-func newPdate()(*pdate) {
-	d := &pdate{
-		n: false,
+func newPerson(id string)(*person) {
+	d := &person {
+		id: id,
+		running: true,
 	}
+
 	for i := 1; i < lag - 1; i++ {
 		for j := 1; j < lag - 1; j++ {
 			d.m[0][i][j] = getrand()
 		}
 	}
-	return d
-}
 
-func newPerson(id string)(*person) {
-	ii := make(chan string, 1)
-	oo := make(chan string, 1)
-	p := newPdate()
-	d := &person {
-		id: id,
-		d: p,
-		running: true,
-		i: ii,
-		o: oo,
-	}
-
+	//Keep Modify 
 	go func(p *person){
 		for p.running {
-			p.d.update()
+			p.tupdate()
 			time.Sleep(1e9)
 		}
 	}(d)
-
+	//Judge Kill
 	go func(p *person){
 		for p.running{
-			p.d.n = false
+			p.n = false
 			time.Sleep(60e9)
-			if !p.d.n {
+			if !p.n {
 				p.running = false
 				delete(mp.m, p.id)
 			}
 		}
 	}(d)
-
-	go func(p *person){
-		for p.running {
-			info := <-d.i
-			p.d.iupdate(info)
-		}
-	}(d)
-
 	return d
 }
-
+///Hands change auto lg
 func changeHand(w http.ResponseWriter, r *http.Request) {
 	_ = r.ParseForm()
 	if _, ok := r.Form["ch"]; !ok {
