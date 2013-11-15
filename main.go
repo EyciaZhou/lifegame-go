@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"sync"
 	"time"
+	"math/rand"
 	"encoding/json"
 	"strings"
 )
@@ -34,9 +35,14 @@ type persons struct {
 }
 
 var (
-	c chan bool
+	r rand.Source
 	mp persons
 )
+
+func getrand()bool {
+	r := rand.New(rand.NewSource(99))
+	return r.Float32() > 0.7
+}
 
 func (pss *persons)pprint(id string, w http.ResponseWriter, t string) {
 	pss.m[id].d.n = true
@@ -123,7 +129,7 @@ func newPdate()(*pdate) {
 	}
 	for i := 1; i < lag - 1; i++ {
 		for j := 1; j < lag - 1; j++ {
-			d.m[0][i][j] = <-c
+			d.m[0][i][j] = getrand()
 		}
 	}
 	return d
@@ -218,23 +224,10 @@ func lgHand(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	c = make(chan bool, 1)
 	mp = persons {
 		map[string](*person){},
 	}
-	go func(){
-		for true {
-			select {
-				case c <- true:
-				case c <- true:
-				case c <- false:
-				case c <- false:
-				case c <- false:
-				case c <- false:
-			}
-		}
-	}()
-
+	r = rand.New(rand.NewSource(time.Now().Unix()))
 	http.HandleFunc("/lg", lgHand)
 	http.HandleFunc("/auto", autoHand)
 	http.HandleFunc("/change", changeHand)
