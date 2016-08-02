@@ -38,7 +38,7 @@
 		init = function() {
 			st = "";
 			for(var i=1;i<=40;i++){
-					st=st+'<div class="ll" style="top:'+(i-1)*20+'">';
+					st=st+'<div class="ll" style="top:'+(i-1)*12+'">';
 					for(var j=1;j<=40;j++){
 						st=st+'<div class="uu" id="'+i+'_'+j+'"></div>';
 					}
@@ -58,21 +58,22 @@
 		<div id="lg"></div>
 	</body>
 	<style>
+
 		.ll{
 			position:absolute;
 		}
 		.bb{
-			height:20px;
-			width:20px;
-			border-radius:2px;
-			background:#88FF88;
+			height:10px;
+			width:10px;
+			border: 1px solid white;
+			background:#00b18a;
 			float:left;
 		}
 		.uu{
-			height:20px;
-			width:20px;
-			border-radius:2px;
-			background:#000000;
+			height:10px;
+			width:10px;
+			border: 0.5px solid white;
+			background:#f4f4f4;
 			float:left;
 		}
 	</style>
