@@ -1,0 +1,43 @@
+- hosts: all
+  remote_user: root
+  tasks:
+    - name: mkdirs
+      file: path={{ item}} state=directory
+      with_items:
+        - /var/log/lifegame
+        - /tmp/lifegame
+        - /opt/lifegame
+      tags: update
+
+    - name: git clone
+      git: repo=https://github.com/EyciaZhou/lifegame-go.git dest=/tmp/lifegame force=yes accept_hostkey=yes
+      tags: update
+
+    - name: download binary
+      get_url: url=https://eycia.me/lifegame-v1.0-linux.tar dest=/tmp/lifegame/
+      tags: update
+    
+    - name: untar
+      unarchive: copy=no src=/tmp/lifegame/lifegame-v1.0-linux.tar dest=/opt/lifegame/
+      tags: update
+
+    - name: copy files
+      command: mv -f {{ item.src }} {{ item.dest }}
+      with_items:
+        - { src: "/tmp/lifegame/deploy/files/lifegame.supervisord.conf", dest: "/etc/supervisor/conf.d/lifegame.supervisord.conf" }
+        - { src: "/tmp/lifegame/html/auto.html", dest: "/opt/lifegame/html/auto.html" }
+        - { src: "/tmp/lifegame/html/js/jquery.js", dest: "/opt/lifegame/html/js/jquery.js" }
+      tags: update
+
+    - name: Delete temp files
+      file: path={{ item }} state=absent
+      with_items:
+        - /tmp/lifegame
+      notify:
+        - restart lifegame
+      tags: update
+
+  handlers:
+    - name: restart lifegame
+      supervisorctl: name=lifegame state=restart supervisorctl_path=/usr/local/bin/supervisorctl
+      
