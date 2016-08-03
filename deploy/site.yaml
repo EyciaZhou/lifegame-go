@@ -7,6 +7,8 @@
         - /var/log/lifegame
         - /tmp/lifegame
         - /opt/lifegame
+        - /opt/lifegame/html
+        - /opt/lifegame/html/js
       tags: update
 
     - name: git clone
@@ -39,5 +41,5 @@
 
   handlers:
     - name: restart lifegame
-      supervisorctl: name=lifegame state=restart supervisorctl_path=/usr/local/bin/supervisorctl
+      supervisorctl: name=lifegame state=restarted
       
